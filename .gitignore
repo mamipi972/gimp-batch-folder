@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Fichiers de test locaux / local test scratch
+/tests/_scratch/
+*.log
+
+# Systèmes / OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs / editors
+.idea/
+.vscode/
+*.swp
