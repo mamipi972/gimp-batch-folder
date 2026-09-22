@@ -341,7 +341,27 @@ GPL-3.0-or-later, like GIMP. See [LICENSE](LICENSE).
 
 ---
 
+
 ## Français
+
+### Traitement par lot d'images depuis un dossier — a BIMP replacement for GIMP 3
+
+<p align="center">
+  <a href="#english"><b>English</b></a> ·
+  <a href="#français"><b>Français</b></a>
+</p>
+
+<p align="center">
+  <img alt="GIMP 3.0+" src="https://img.shields.io/badge/GIMP-3.0%2B-5f3a7a">
+  <img alt="Python 3" src="https://img.shields.io/badge/Python-3-3776ab">
+  <img alt="License GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
+  <img alt="106 tests" src="https://img.shields.io/badge/tests-106%20passing-success">
+</p>
+
+> Redimensionnez, recadrez, faites pivoter, ajoutez un filigrane, convertissez, renommez et effectuez un étalonnage des couleurs sur chaque
+> image d'un dossier — et exportez chaque calque vers un fichier distinct.
+> BIMP n'ayant pas été porté vers GIMP 3, ce module comble ce manque grâce à une solution native en Python.
+---
 
 ### Installation
 
