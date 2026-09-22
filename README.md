@@ -9,7 +9,7 @@
   <img alt="GIMP 3.0+" src="https://img.shields.io/badge/GIMP-3.0%2B-5f3a7a">
   <img alt="Python 3" src="https://img.shields.io/badge/Python-3-3776ab">
   <img alt="License GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
-  <img alt="106 tests" src="https://img.shields.io/badge/tests-106%20passing-success">
+  <img alt="107 tests" src="https://img.shields.io/badge/tests-107%20passing-success">
 </p>
 
 > Resize, crop, rotate, watermark, convert, rename and colour-grade every
@@ -132,7 +132,10 @@ Naming template tokens:
 | `{index}` | position in the batch — `{index:03d}` gives `007` |
 | `{parent}` | name of the containing folder |
 | `{width}` `{height}` | **final** dimensions |
-| `{date}` `{time}` | `2026-09-22`, `14-32-05` |
+| `{date}` | ISO date, `2026-09-22` — sorts by itself in a file browser |
+| `{date_fr}` | day-first date, `22-09-2026` |
+| `{time}` | `14-32-05` |
+| `{year}` `{month}` `{day}` `{hour}` `{minute}` | `2026` `09` `22` `14` `32` — build any order you like |
 | `{layer}` `{layer_index}` | layer export only |
 
 If the output file already exists: rename (`_1`, `_2`…), skip, or overwrite.
@@ -299,7 +302,7 @@ bfp/gimpops.py         every interaction with the GIMP 3 API
 bfp/runner.py          batch orchestration
 bfp/ui.py              GTK 3 dialog
 looks/                 the six bundled recipes
-tests/                 106 tests, runnable without GIMP
+tests/                 107 tests, runnable without GIMP
 ```
 
 #### Tests
@@ -330,6 +333,25 @@ first, with the dry-run button.
 * TIFF compression is passed as a string (`lzw`, `deflate`…); if your build
   expects something else, the log says so and GIMP's default applies.
 
+### Related projects
+
+**[Batcher](https://github.com/kamilburda/batcher)** by Kamil Burda is the
+mature, actively maintained batch plug-in for GIMP 3 (BSD-3-Clause). It is
+broader than this one: it can run *any* installed GIMP filter or plug-in as a
+batch action, chain actions and conditions, and work on images already open in
+GIMP — not just a folder on disk. If you want a general-purpose batch engine,
+start there.
+
+This plug-in is narrower on purpose. It does one thing — walk a folder — with
+a fixed, opinionated pipeline, and adds two things Batcher does not have:
+JSON **look recipes** (chains of GEGL operations with a global dosage slider,
+shareable as files), and a colour-grading step built in rather than assembled
+from filters. It is also GPL-3.0, like GIMP itself.
+
+Historically, [BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp)
+by Alessandro Francesconi was the reference for GIMP 2.10; it has not been
+ported to GIMP 3.
+
 ### Contributing
 
 Issues and pull requests welcome. Please run the test suite before opening a
@@ -344,7 +366,7 @@ GPL-3.0-or-later, like GIMP. See [LICENSE](LICENSE).
 
 ## Français
 
-### Traitement par lot d'images depuis un dossier — a BIMP replacement for GIMP 3
+### Traitement par lots d'images depuis un dossier — un remplaçant de BIMP pour GIMP 3
 
 <p align="center">
   <a href="#english"><b>English</b></a> ·
@@ -355,12 +377,13 @@ GPL-3.0-or-later, like GIMP. See [LICENSE](LICENSE).
   <img alt="GIMP 3.0+" src="https://img.shields.io/badge/GIMP-3.0%2B-5f3a7a">
   <img alt="Python 3" src="https://img.shields.io/badge/Python-3-3776ab">
   <img alt="License GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
-  <img alt="106 tests" src="https://img.shields.io/badge/tests-106%20passing-success">
+  <img alt="107 tests" src="https://img.shields.io/badge/tests-107%20passing-success">
 </p>
 
 > Redimensionnez, recadrez, faites pivoter, ajoutez un filigrane, convertissez, renommez et effectuez un étalonnage des couleurs sur chaque
 > image d'un dossier — et exportez chaque calque vers un fichier distinct.
 > BIMP n'ayant pas été porté vers GIMP 3, ce module comble ce manque grâce à une solution native en Python.
+
 ---
 
 ### Installation
@@ -476,7 +499,10 @@ Modèle de nommage, avec ces jetons :
 | `{index}` | numéro dans le lot — `{index:03d}` donne `007` |
 | `{parent}` | nom du dossier contenant l'image |
 | `{width}` `{height}` | dimensions **finales** |
-| `{date}` `{time}` | `2026-09-22`, `14-32-05` |
+| `{date}` | date ISO, `2026-09-22` — se trie toute seule dans l'explorateur |
+| `{date_fr}` | date à la française, `22-09-2026` |
+| `{time}` | `14-32-05` |
+| `{year}` `{month}` `{day}` `{hour}` `{minute}` | `2026` `09` `22` `14` `32` — pour composer l'ordre que vous voulez |
 | `{layer}` `{layer_index}` | export des calques uniquement |
 
 Si le fichier de sortie existe déjà : renommer (`_1`, `_2`…), ignorer, ou
@@ -651,7 +677,7 @@ bfp/gimpops.py         toutes les interactions avec l'API GIMP 3
 bfp/runner.py          orchestration du lot
 bfp/ui.py              boîte de dialogue GTK 3
 looks/                 les six recettes livrées
-tests/                 106 tests, exécutables sans GIMP
+tests/                 107 tests, exécutables sans GIMP
 ```
 
 #### Tests
@@ -660,7 +686,7 @@ tests/                 106 tests, exécutables sans GIMP
 python3 -m unittest discover -s tests -p "test_*.py" -t tests
 ```
 
-Les tests tournent **sans GIMP** : `tests/fakegi.py` et `tests/fakegtk.py`
+Les 107 tests tournent **sans GIMP** : `tests/fakegi.py` et `tests/fakegtk.py`
 simulent juste assez de GIMP 3, GEGL et GTK pour exécuter le pipeline et
 construire la boîte de dialogue. Ils vérifient l'ordre des opérations, les
 valeurs transmises à chaque procédure, les chemins de repli, l'aller-retour
@@ -684,6 +710,27 @@ bouton **Simuler**.
 * La compression TIFF est transmise en tant que chaîne (`lzw`, `deflate`…) ;
   si votre version attend autre chose, le journal le signale et la valeur par
   défaut de GIMP s'applique.
+
+### Projets voisins
+
+**[Batcher](https://github.com/kamilburda/batcher)**, de Kamil Burda, est le
+greffon de traitement par lots mûr et activement maintenu pour GIMP 3
+(licence BSD-3-Clause). Il est plus large que celui-ci : il sait exécuter
+*n'importe quel* filtre ou greffon installé comme action de lot, enchaîner
+actions et conditions, et travailler sur les images déjà ouvertes dans GIMP —
+pas seulement sur un dossier du disque. Si vous cherchez un moteur de lot
+généraliste, commencez par là.
+
+Ce greffon-ci est volontairement plus étroit. Il fait une chose — parcourir un
+dossier — avec un pipeline fixe et assumé, et apporte deux choses que Batcher
+n'a pas : les **recettes de look** en JSON (enchaînements d'opérations GEGL
+avec un curseur de dosage global, partageables sous forme de fichiers) et une
+étape d'étalonnage intégrée plutôt qu'assemblée à partir de filtres. Il est
+aussi sous GPL-3.0, comme GIMP.
+
+Historiquement, [BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp)
+d'Alessandro Francesconi était la référence pour GIMP 2.10 ; il n'a pas été
+porté vers GIMP 3.
 
 ### Contribuer
 

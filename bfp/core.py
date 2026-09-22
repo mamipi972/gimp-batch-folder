@@ -306,9 +306,11 @@ def render_template(template, context):
     """Applique un modèle de nom de fichier.
 
     Jetons disponibles : ``{name}``, ``{ext}``, ``{index}``, ``{parent}``,
-    ``{width}``, ``{height}``, ``{date}``, ``{time}``, ``{layer}``,
-    ``{layer_index}``.  Un jeton inconnu est laissé tel quel plutôt que de
-    faire échouer le traitement, et la mise en forme ``{index:03d}`` marche.
+    ``{width}``, ``{height}``, ``{date}`` (2026-09-22), ``{date_fr}``
+    (22-09-2026), ``{time}``, ``{year}``, ``{month}``, ``{day}``, ``{hour}``,
+    ``{minute}``, ``{layer}``, ``{layer_index}``.  Un jeton inconnu est laissé
+    tel quel plutôt que de faire échouer le traitement, et la mise en forme
+    ``{index:03d}`` marche.
     """
     if not template:
         template = "{name}{ext}"
@@ -335,8 +337,17 @@ def build_name_context(source_path, index=1, width=0, height=0,
         "parent": parent,
         "width": int(width),
         "height": int(height),
+        # {date} reste en ISO : c'est le seul format qui se trie tout seul
+        # dans un explorateur de fichiers. {date_fr} est là pour les noms
+        # destinés à être lus par des humains.
         "date": now.strftime("%Y-%m-%d"),
+        "date_fr": now.strftime("%d-%m-%Y"),
         "time": now.strftime("%H-%M-%S"),
+        "year": now.strftime("%Y"),
+        "month": now.strftime("%m"),
+        "day": now.strftime("%d"),
+        "hour": now.strftime("%H"),
+        "minute": now.strftime("%M"),
         "layer": sanitize_filename(layer_name),
         "layer_index": int(layer_index),
     }

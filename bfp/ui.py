@@ -50,7 +50,10 @@ _ANCHOR_LABELS = ("↖", "↑", "↗", "←", "•", "→", "↙", "↓", "↘")
 _TOKEN_HELP = (
     "Jetons : <tt>{name}</tt> nom sans extension · <tt>{ext}</tt> extension · "
     "<tt>{index}</tt> numéro (<tt>{index:03d}</tt>) · <tt>{parent}</tt> dossier · "
-    "<tt>{width}</tt> · <tt>{height}</tt> · <tt>{date}</tt> · <tt>{time}</tt>"
+    "<tt>{width}</tt> · <tt>{height}</tt>\n"
+    "Dates : <tt>{date}</tt> 2026-09-22 · <tt>{date_fr}</tt> 22-09-2026 · "
+    "<tt>{time}</tt> 14-32-05 · <tt>{year}</tt> <tt>{month}</tt> "
+    "<tt>{day}</tt> <tt>{hour}</tt> <tt>{minute}</tt>"
 )
 
 

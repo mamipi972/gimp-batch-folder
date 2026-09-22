@@ -163,6 +163,20 @@ class TestNommage(unittest.TestCase):
                                               context),
                          "IMG_0042_800x600.webp")
 
+    def test_dates_francaise_et_iso(self):
+        import datetime
+        context = core.build_name_context(
+            "/photos/a.jpg",
+            now=datetime.datetime(2026, 9, 22, 14, 32, 5))
+        self.assertEqual(core.render_template("{date}", context), "2026-09-22")
+        self.assertEqual(core.render_template("{date_fr}", context),
+                         "22-09-2026")
+        self.assertEqual(core.render_template("{time}", context), "14-32-05")
+        self.assertEqual(
+            core.render_template("{day}_{month}_{year}_{hour}h{minute}",
+                                 context),
+            "22_09_2026_14h32")
+
     def test_jeton_inconnu_reste_litteral(self):
         context = core.build_name_context("/a/b.png")
         self.assertEqual(core.render_template("{name}{inconnu}", context),
