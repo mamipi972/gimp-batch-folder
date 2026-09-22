@@ -333,24 +333,69 @@ first, with the dry-run button.
 * TIFF compression is passed as a string (`lzw`, `deflate`…); if your build
   expects something else, the log says so and GIMP's default applies.
 
-### Related projects
+### Related projects — feature comparison
 
+Be honest with yourself before installing this one:
 **[Batcher](https://github.com/kamilburda/batcher)** by Kamil Burda is the
-mature, actively maintained batch plug-in for GIMP 3 (BSD-3-Clause). It is
-broader than this one: it can run *any* installed GIMP filter or plug-in as a
-batch action, chain actions and conditions, and work on images already open in
-GIMP — not just a folder on disk. If you want a general-purpose batch engine,
-start there.
+mature, actively maintained, general-purpose batch plug-in for GIMP 3. It does
+more than this plug-in in almost every direction. This one is narrower on
+purpose, and only three rows below are genuinely its own.
 
-This plug-in is narrower on purpose. It does one thing — walk a folder — with
-a fixed, opinionated pipeline, and adds two things Batcher does not have:
-JSON **look recipes** (chains of GEGL operations with a global dosage slider,
-shareable as files), and a colour-grading step built in rather than assembled
-from filters. It is also GPL-3.0, like GIMP itself.
+[BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp) by
+Alessandro Francesconi was the reference for GIMP 2.10 and has **not** been
+ported to GIMP 3 — it is listed for historical comparison only.
 
-Historically, [BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp)
-by Alessandro Francesconi was the reference for GIMP 2.10; it has not been
-ported to GIMP 3.
+| | **Batch Folder** (this one) | **Batcher** | **BIMP** |
+|---|:---:|:---:|:---:|
+| **General** | | | |
+| Target GIMP | 3.0+ | 3.0+ | 2.10 only |
+| Latest version | 1.0 | 1.2.9 (May 2026) | 2.6 |
+| Licence | GPL-3.0-or-later | BSD-3-Clause | GPL-2.0-or-later |
+| Written in | Python 3 | Python 3 | C |
+| Graphical dialog | ✅ | ✅ | ✅ |
+| Preview before running | ❌ dry run instead | ✅ | ✅ |
+| **Input / output** | | | |
+| A folder on disk | ✅ | ✅ | ✅ |
+| Recurse into subfolders | ✅ | — | ✅ |
+| Images already open in GIMP | ❌ | ✅ | ❌ |
+| Export each layer separately | ✅ | ✅ | ❌ |
+| Format conversion + quality settings | ✅ | ✅ | ✅ |
+| Naming template | ✅ | ✅ | ✅ |
+| Overwrite / skip / auto-rename policy | ✅ | — | ✅ |
+| **Transforms** | | | |
+| Resize | ✅ 6 modes | ✅ | ✅ |
+| Crop | ✅ 4 modes, incl. auto-trim | ✅ | ✅ |
+| Rotate / flip | ✅ 90·180·270 | ✅ incl. free angle | ✅ |
+| Canvas resize, align, offset | ❌ | ✅ | ❌ |
+| Text watermark | ✅ incl. angle | ✅ | ✅ |
+| Image watermark | ✅ | ✅ | ✅ |
+| Blur / sharpen | via recipes | ✅ | ✅ |
+| **Colour** | | | |
+| Greyscale / RGB conversion | ✅ | ✅ | ✅ |
+| Brightness, contrast, levels, curves | via recipes | ✅ built-in actions | ✅ |
+| Auto white balance, equalize, stretch | ❌ | ✅ | ❌ |
+| **Shareable JSON look recipes** | ✅ **only here** | ❌ | ❌ |
+| **Split toning** | ✅ **only here** | ❌ | ❌ |
+| **One dosage slider for a whole grade** | ✅ **only here** | ❌ | ❌ |
+| **Power features** | | | |
+| Run any installed filter or plug-in | ❌ GEGL ops only | ✅ | ✅ one procedure |
+| G'MIC filters | ❌ | ✅ | ❌ |
+| Filtering conditions (visible, tagged…) | ❌ extension only | ✅ 19 built-in | ❌ |
+| Saveable, shareable presets | ✅ | ✅ | not documented |
+| Dry run (simulate without writing) | ✅ | ❌ | ❌ |
+| Detailed log file | ✅ | — | — |
+| Non-interactive PDB procedure | ✅ | — | — |
+| Automated test suite | ✅ 107 tests | — | — |
+
+✅ yes · ❌ no · — not documented or not verified.
+
+**In short.** If you want a general-purpose batch engine, install Batcher: it
+runs any filter you already have, filters by conditions, and handles images
+already open in GIMP. Install this one if you specifically want *colour
+grading as files* — a chain of GEGL operations with per-step blending and a
+single global dosage slider, saved as JSON you can email to someone — plus
+split toning, a dry-run button and a scriptable PDB procedure. The two
+install side by side without conflict.
 
 ### Contributing
 
@@ -711,26 +756,71 @@ bouton **Simuler**.
   si votre version attend autre chose, le journal le signale et la valeur par
   défaut de GIMP s'applique.
 
-### Projets voisins
+### Projets voisins — comparatif des fonctionnalités
 
+Autant être franc avant que vous n'installiez celui-ci :
 **[Batcher](https://github.com/kamilburda/batcher)**, de Kamil Burda, est le
-greffon de traitement par lots mûr et activement maintenu pour GIMP 3
-(licence BSD-3-Clause). Il est plus large que celui-ci : il sait exécuter
-*n'importe quel* filtre ou greffon installé comme action de lot, enchaîner
-actions et conditions, et travailler sur les images déjà ouvertes dans GIMP —
-pas seulement sur un dossier du disque. Si vous cherchez un moteur de lot
-généraliste, commencez par là.
+greffon de traitement par lots généraliste, mûr et activement maintenu pour
+GIMP 3. Il en fait davantage dans presque toutes les directions. Celui-ci est
+volontairement plus étroit, et seules trois lignes du tableau lui appartiennent
+vraiment.
 
-Ce greffon-ci est volontairement plus étroit. Il fait une chose — parcourir un
-dossier — avec un pipeline fixe et assumé, et apporte deux choses que Batcher
-n'a pas : les **recettes de look** en JSON (enchaînements d'opérations GEGL
-avec un curseur de dosage global, partageables sous forme de fichiers) et une
-étape d'étalonnage intégrée plutôt qu'assemblée à partir de filtres. Il est
-aussi sous GPL-3.0, comme GIMP.
+[BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp),
+d'Alessandro Francesconi, était la référence pour GIMP 2.10 ; il n'a **pas**
+été porté vers GIMP 3 et ne figure ici qu'à titre de comparaison historique.
 
-Historiquement, [BIMP](https://github.com/alessandrofrancesconi/gimp-plugin-bimp)
-d'Alessandro Francesconi était la référence pour GIMP 2.10 ; il n'a pas été
-porté vers GIMP 3.
+| | **Batch Folder** (celui-ci) | **Batcher** | **BIMP** |
+|---|:---:|:---:|:---:|
+| **Général** | | | |
+| Version de GIMP visée | 3.0+ | 3.0+ | 2.10 seulement |
+| Dernière version | 1.0 | 1.2.9 (mai 2026) | 2.6 |
+| Licence | GPL-3.0-or-later | BSD-3-Clause | GPL-2.0-or-later |
+| Écrit en | Python 3 | Python 3 | C |
+| Interface graphique | ✅ | ✅ | ✅ |
+| Aperçu avant traitement | ❌ simulation à la place | ✅ | ✅ |
+| **Entrée / sortie** | | | |
+| Un dossier du disque | ✅ | ✅ | ✅ |
+| Descendre dans les sous-dossiers | ✅ | — | ✅ |
+| Images déjà ouvertes dans GIMP | ❌ | ✅ | ❌ |
+| Export de chaque calque séparément | ✅ | ✅ | ❌ |
+| Conversion de format + réglages qualité | ✅ | ✅ | ✅ |
+| Modèle de renommage | ✅ | ✅ | ✅ |
+| Politique écraser / ignorer / renommer | ✅ | — | ✅ |
+| **Transformations** | | | |
+| Redimensionnement | ✅ 6 modes | ✅ | ✅ |
+| Recadrage | ✅ 4 modes, dont détourage auto | ✅ | ✅ |
+| Rotation / miroir | ✅ 90·180·270 | ✅ dont angle libre | ✅ |
+| Taille du canevas, alignement, décalage | ❌ | ✅ | ❌ |
+| Filigrane texte | ✅ avec angle | ✅ | ✅ |
+| Filigrane image | ✅ | ✅ | ✅ |
+| Flou / netteté | via les recettes | ✅ | ✅ |
+| **Couleur** | | | |
+| Conversion niveaux de gris / RVB | ✅ | ✅ | ✅ |
+| Luminosité, contraste, niveaux, courbes | via les recettes | ✅ actions intégrées | ✅ |
+| Balance des blancs auto, égalisation | ❌ | ✅ | ❌ |
+| **Recettes de look en JSON partageables** | ✅ **unique** | ❌ | ❌ |
+| **Virage partiel** | ✅ **unique** | ❌ | ❌ |
+| **Un seul curseur de dosage global** | ✅ **unique** | ❌ | ❌ |
+| **Fonctions avancées** | | | |
+| Exécuter n'importe quel filtre ou greffon | ❌ opérations GEGL seulement | ✅ | ✅ une procédure |
+| Filtres G'MIC | ❌ | ✅ | ❌ |
+| Conditions de filtrage (visible, étiquette…) | ❌ extension seulement | ✅ 19 intégrées | ❌ |
+| Préréglages enregistrables et partageables | ✅ | ✅ | non documenté |
+| Simulation (sans rien écrire) | ✅ | ❌ | ❌ |
+| Journal détaillé | ✅ | — | — |
+| Procédure PDB non interactive | ✅ | — | — |
+| Suite de tests automatisés | ✅ 107 tests | — | — |
+
+✅ oui · ❌ non · — non documenté ou non vérifié.
+
+**En résumé.** Si vous cherchez un moteur de lot généraliste, installez
+Batcher : il exécute n'importe quel filtre déjà présent, filtre par
+conditions, et traite les images ouvertes dans GIMP. Installez celui-ci si
+vous voulez précisément un *étalonnage sous forme de fichiers* — un
+enchaînement d'opérations GEGL avec fusion par étape et un unique curseur de
+dosage global, enregistré en JSON que vous pouvez envoyer par courriel —
+plus le virage partiel, le bouton de simulation et une procédure PDB
+scriptable. Les deux cohabitent sans conflit.
 
 ### Contribuer
 
