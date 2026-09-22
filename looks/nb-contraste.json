@@ -1,0 +1,10 @@
+{
+  "name": "N&B contrasté",
+  "description": "Noir et blanc nerveux : désaturation totale, contraste marqué, micro-netteté et vignettage discret.",
+  "steps": [
+    { "op": "gegl:saturation",         "params": { "scale": 0.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.28, "brightness": -0.02 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 1.2, "scale": 0.6, "threshold": 0.0 } },
+    { "op": "gegl:vignette",           "params": { "color": "#000000", "radius": 1.35, "softness": 0.75, "gamma": 2.0, "proportion": 1.0 }, "opacity": 55.0 }
+  ]
+}

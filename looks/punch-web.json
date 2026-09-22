@@ -1,0 +1,9 @@
+{
+  "name": "Punch web",
+  "description": "Pour les images destinées à un écran : netteté de sortie, contraste et couleurs renforcés, sans virage.",
+  "steps": [
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.12, "brightness": 0.01 } },
+    { "op": "gegl:saturation",         "params": { "scale": 1.15 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 0.8, "scale": 0.75, "threshold": 0.0 } }
+  ]
+}

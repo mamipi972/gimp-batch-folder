@@ -1,0 +1,11 @@
+{
+  "name": "Vintage délavé",
+  "description": "Tirage fatigué : noirs très relevés, couleurs passées, dominante chaude et grain visible.",
+  "steps": [
+    { "op": "gegl:levels",             "params": { "in-low": 0.02, "in-high": 0.95, "out-low": 0.12, "out-high": 0.94 } },
+    { "op": "gegl:saturation",         "params": { "scale": 0.68 } },
+    { "op": "gegl:color-temperature",  "params": { "original-temperature": 6500.0, "intended-temperature": 5200.0 } },
+    { "special": "split-tone",         "params": { "shadows": "#4a3f6b", "highlights": "#f2e0b8", "amount": 26.0 } },
+    { "op": "gegl:noise-rgb",          "params": { "independent": false, "correlated": true, "red": 0.06, "green": 0.06, "blue": 0.06, "alpha": 0.0, "seed": 1977 } }
+  ]
+}

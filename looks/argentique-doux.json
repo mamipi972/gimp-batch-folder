@@ -1,0 +1,12 @@
+{
+  "name": "Argentique doux",
+  "description": "Rendu film : contraste adouci, noirs relevés, virage partiel froid/chaud, grain fin et vignettage léger.",
+  "steps": [
+    { "op": "gegl:levels",             "params": { "in-low": 0.0, "in-high": 0.97, "out-low": 0.045, "out-high": 0.98 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.06 } },
+    { "op": "gegl:saturation",         "params": { "scale": 0.86 } },
+    { "special": "split-tone",         "params": { "shadows": "#1d3b57", "highlights": "#e9cd93", "amount": 22.0 } },
+    { "op": "gegl:noise-rgb",          "params": { "independent": false, "correlated": true, "red": 0.035, "green": 0.035, "blue": 0.035, "alpha": 0.0, "seed": 4242 } },
+    { "op": "gegl:vignette",           "params": { "color": "#000000", "radius": 1.5, "softness": 0.85, "gamma": 1.8, "proportion": 1.0 }, "opacity": 40.0 }
+  ]
+}

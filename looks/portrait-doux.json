@@ -1,0 +1,9 @@
+{
+  "name": "Portrait doux",
+  "description": "Peaux adoucies : voile lumineux, ombres déboucées, hautes lumières retenues, saturation légèrement relevée.",
+  "steps": [
+    { "op": "gegl:shadows-highlights", "params": { "shadows": 22.0, "highlights": -18.0, "radius": 120.0, "compress": 40.0 } },
+    { "op": "gegl:softglow",           "params": { "glow-radius": 12.0, "brightness": 0.18, "sharpness": 0.82 }, "opacity": 45.0 },
+    { "op": "gegl:saturation",         "params": { "scale": 1.04 } }
+  ]
+}
