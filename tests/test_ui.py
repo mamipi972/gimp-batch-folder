@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.dirname(_HERE))
 sys.path.insert(0, _HERE)
 
 import fakegi  # noqa: E402
+import fakegtk  # noqa: E402
 
 fakegi.install(with_gtk=True)
 
@@ -63,6 +64,55 @@ class TestConstruction(UITestCase):
     def test_recettes_proposees(self):
         identifiants = [i for i, _t in self.dialog.look_combo.items]
         self.assertIn("Argentique doux", identifiants)
+
+
+class TestOngletLook(UITestCase):
+    def test_boutons_de_l_editeur_presents(self):
+        libelles = [b.label for b in
+                    _widgets_of(self.dialog.notebook, fakegtk.Button)]
+        for attendu in ("Nouvelle…", "Modifier…", "Dupliquer…", "Recharger"):
+            self.assertIn(attendu, libelles)
+
+    def test_modifier_sans_selection_demande_une_recette(self):
+        messages = []
+        self.dialog._message = lambda text, error=False: messages.append(text)
+        self.dialog.look_combo.set_active_id(None)
+        self.dialog._looks = []
+        self.dialog._open_look_editor("edit")
+        self.assertTrue(messages)
+        self.assertIn("Sélectionnez", messages[0])
+
+    def test_ouvrir_l_editeur_puis_fermer_ne_change_rien(self):
+        avant = self.dialog.binder.collect()["look_name"]
+        messages = []
+        self.dialog._message = lambda text, error=False: messages.append(text)
+        self.dialog._open_look_editor("new")      # la fausse fenêtre se ferme
+        self.assertEqual(messages, [])
+        self.assertEqual(self.dialog.binder.collect()["look_name"], avant)
+
+    def test_image_temoin_prise_dans_le_dossier_source(self):
+        source = os.path.join(self.tmp, "photos")
+        os.makedirs(source)
+        for nom in ("b.jpg", "a.jpg"):
+            with open(os.path.join(source, nom), "wb") as handle:
+                handle.write(b"x")
+        self.dialog.source_chooser.set_filename(source)
+        self.assertEqual(os.path.basename(self.dialog._first_source_image()),
+                         "a.jpg")
+
+
+def _widgets_of(container, kind, found=None):
+    """Parcourt l'arbre de widgets. Le faux Widget accepte n'importe quel
+    attribut, d'où le test de type explicite sur le carnet d'onglets."""
+    found = [] if found is None else found
+    if isinstance(container, fakegtk.Notebook):
+        for page, _label in container.pages:
+            _widgets_of(page, kind, found)
+    for child in getattr(container, "children", []) or []:
+        if isinstance(child, kind):
+            found.append(child)
+        _widgets_of(child, kind, found)
+    return found
 
 
 class TestAllerRetour(UITestCase):

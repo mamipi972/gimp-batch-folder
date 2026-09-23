@@ -36,7 +36,7 @@ from .core import (  # noqa: E402
     rgba_to_hex,
     validate_settings,
 )
-from .looks import load_looks
+from .looks import find_look, load_looks
 from .runner import BatchRunner
 from .gimpops import Reporter
 
@@ -695,27 +695,89 @@ class BatchDialog(Gtk.Dialog):
 
         self._look_widgets = [self.look_combo, look_opacity]
 
-        reload_button = Gtk.Button(label="Recharger les recettes")
+        reload_button = Gtk.Button(label="Recharger")
+        reload_button.set_tooltip_text(
+            "Relire les fichiers de recettes sur le disque.")
         reload_button.connect("clicked", self._on_reload_looks)
+
+        new_button = Gtk.Button(label="Nouvelle…")
+        new_button.set_tooltip_text("Composer une recette de zéro.")
+        new_button.connect("clicked", lambda *a: self._open_look_editor("new"))
+
+        edit_button = Gtk.Button(label="Modifier…")
+        edit_button.set_tooltip_text(
+            "Ouvrir la recette sélectionnée dans l'éditeur.")
+        edit_button.connect("clicked", lambda *a: self._open_look_editor("edit"))
+
+        duplicate_button = Gtk.Button(label="Dupliquer…")
+        duplicate_button.set_tooltip_text(
+            "Partir de la recette sélectionnée sous un autre nom.")
+        duplicate_button.connect("clicked",
+                                 lambda *a: self._open_look_editor("copy"))
 
         frame = _frame("Look", _vbox(
             look_enabled,
             _row("Recette :", self.look_combo, expand=True),
             self.look_description,
-            _row("Dosage (%) :", look_opacity, reload_button),
+            _row("Dosage (%) :", look_opacity),
+            _row(new_button, edit_button, duplicate_button, reload_button),
         ))
 
         info = _frame("Vos propres recettes", _vbox(
-            _label("Une recette est un fichier JSON décrivant une suite "
-                   "d'opérations GEGL. Déposez les vôtres dans :"),
+            _label("L'éditeur compose la recette pour vous : il propose les "
+                   "opérations GEGL de votre installation, fabrique les "
+                   "réglages à partir de l'opération choisie et montre un "
+                   "aperçu avant/après sur une image témoin."),
+            _label("Les recettes que vous enregistrez vont dans :"),
             _label("<tt>%s</tt>" % GLib.markup_escape_text(
                 paths.user_looks_directory()), markup=True),
-            _label("Elles apparaîtront après « Recharger les recettes ». "
-                   "Une opération absente de votre installation est signalée "
-                   "dans le journal et simplement sautée.", dim=True),
+            _label("Ce sont de simples fichiers JSON : pour partager une "
+                   "recette, envoyez le fichier. Celles livrées avec le "
+                   "greffon ne sont jamais écrasées — une recette du même nom "
+                   "enregistrée par vos soins a la priorité.", dim=True),
         ))
 
         return _page(frame, info)
+
+    def _open_look_editor(self, mode="new"):
+        """Ouvre l'éditeur de recettes en création, modification ou copie."""
+        try:
+            from .lookeditor import edit_look
+        except Exception as exc:
+            self._message("Éditeur indisponible : %s" % exc, error=True)
+            return
+
+        look = None
+        if mode in ("edit", "copy"):
+            look = find_look(self._looks, self.look_combo.get_active_id())
+            if look is None:
+                self._message("Sélectionnez d'abord une recette.")
+                return
+            if mode == "copy":
+                look = look.copy(name="%s (copie)" % look.name)
+
+        try:
+            saved = edit_look(self, look, self._first_source_image())
+        except Exception as exc:
+            self._log("ERREUR  éditeur de recettes : %s" % exc)
+            self._message("L'éditeur a rencontré une erreur : %s" % exc,
+                          error=True)
+            return
+
+        if saved:
+            self._on_reload_looks(None)
+            self.look_combo.set_active_id(saved)
+            self.binder.widget("look_enabled").set_active(True)
+            self._update_sensitivity()
+            self._log("Recette enregistrée : %s" % saved)
+
+    def _first_source_image(self):
+        """Première image du dossier source, comme témoin d'aperçu."""
+        try:
+            files = BatchRunner(self.binder.collect(), self._looks).files()
+        except Exception:
+            return None
+        return files[0] if files else None
 
     def _on_reload_looks(self, _button):
         current = self.look_combo.get_active_id()

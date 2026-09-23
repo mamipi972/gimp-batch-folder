@@ -671,6 +671,71 @@ def _merge_down(image, layer, reporter=_NULL_REPORTER):
     return layers[0] if layers else None
 
 
+#: Arguments qu'une étape « proc » n'a pas à déclarer : le greffon les
+#: remplit lui-même s'ils existent dans la signature de la procédure.
+_AUTO_ARGUMENTS = ("run-mode", "image", "drawable", "drawables",
+                   "num-drawables")
+
+
+def apply_proc_step(image, drawable, proc_name, params=None,
+                    reporter=_NULL_REPORTER):
+    """Exécute une procédure du PDB sur un calque, comme étape de recette.
+
+    Contrairement à une opération GEGL, une procédure peut faire à peu près
+    n'importe quoi à l'image — ajouter des calques, l'aplatir, ouvrir une
+    fenêtre. On lui passe donc le mode non interactif quand elle l'accepte, et
+    l'appelant doit revalider le calque après coup.
+    """
+    procedure, used = lookup_procedure(proc_name)
+    if procedure is None:
+        reporter.warn("Procédure « %s » introuvable : étape ignorée."
+                      % proc_name)
+        return False
+
+    try:
+        argument_names = set(spec.name for spec in
+                             (procedure.get_arguments() or []))
+    except Exception:
+        argument_names = set()
+
+    props = dict(params or {})
+    available = {
+        "run-mode": Gimp.RunMode.NONINTERACTIVE,
+        "image": image,
+        "drawable": drawable,
+        "drawables": [drawable],
+        "num-drawables": 1,
+    }
+    for name in _AUTO_ARGUMENTS:
+        if name in argument_names and name not in props:
+            props[name] = available[name]
+
+    config = procedure.create_config()
+    set_props(config, props, reporter, context=used)
+
+    try:
+        result = procedure.run(config)
+    except Exception as exc:
+        reporter.warn("Étape « %s » impossible : %s" % (used, exc))
+        return False
+
+    try:
+        status = result.index(0)
+    except Exception:
+        return True
+    if status == Gimp.PDBStatusType.SUCCESS:
+        return True
+
+    detail = ""
+    try:
+        detail = Gimp.get_pdb().get_last_error() or ""
+    except Exception:
+        pass
+    reporter.warn(("Étape « %s » a échoué (%s) %s"
+                   % (used, status, detail)).strip())
+    return False
+
+
 def _invert_drawable(drawable, reporter=_NULL_REPORTER):
     for operation in ("gegl:invert-gamma", "gegl:invert-linear", "gegl:invert"):
         if gegl_has_operation(operation) and apply_gegl_step(
@@ -770,7 +835,9 @@ def apply_look(image, look, opacity=100.0, reporter=_NULL_REPORTER):
                 target = base
 
         for step in look.steps:
-            if step.special == "split-tone":
+            kind = getattr(step, "kind", "op")
+
+            if kind == "special" and step.special == "split-tone":
                 params = step.params
                 before = target
                 target = apply_split_tone(
@@ -781,6 +848,23 @@ def apply_look(image, look, opacity=100.0, reporter=_NULL_REPORTER):
                     reporter=reporter)
                 if target is not before:
                     any_applied = True
+                continue
+
+            if kind == "proc":
+                if apply_proc_step(image, target, step.proc, step.params,
+                                   reporter):
+                    any_applied = True
+                # Une procédure peut avoir remplacé ou fusionné des calques :
+                # on revalide la cible avant l'étape suivante.
+                if not drawable_is_valid(target):
+                    layers = top_drawables(image)
+                    if not layers:
+                        break
+                    target = layers[0]
+                    reporter.warn(
+                        "L'étape « %s » a modifié la structure des calques ; "
+                        "la suite de la recette repart du calque du dessus."
+                        % step.proc)
                 continue
 
             if apply_gegl_step(target, step.op, step.params, step.opacity,
@@ -1043,6 +1127,40 @@ def export_image(image, path, output_format, settings,
             reporter.error("Enregistrement impossible de %s : %s" % (path, exc))
             return False
     return True
+
+
+def render_preview(source_path, output_path, look=None, opacity=100.0,
+                   max_size=480, reporter=_NULL_REPORTER):
+    """Fabrique un PNG d'aperçu : image réduite, recette appliquée.
+
+    La réduction a lieu **avant** les filtres : un aperçu doit être instantané,
+    et l'on regarde une teinte ou un vignettage, pas du grain au pixel près.
+    Renvoie ``(largeur, hauteur)`` ou ``None``.
+    """
+    image = load_image(source_path, reporter)
+    if image is None:
+        return None
+    try:
+        width, height, _ = compute_resize(
+            image.get_width(), image.get_height(), "fit",
+            int(max_size), int(max_size), allow_upscale=False)
+        set_interpolation("cubic", reporter)
+        if (width, height) != (image.get_width(), image.get_height()):
+            image.scale(width, height)
+
+        if look is not None:
+            apply_look(image, look, opacity, reporter)
+
+        settings = {"png_compression": 1, "flatten": False,
+                    "background_color": "#ffffff"}
+        if not export_image(image, output_path, "png", settings, reporter):
+            return None
+        return image.get_width(), image.get_height()
+    except Exception as exc:
+        reporter.warn("Aperçu impossible : %s" % exc)
+        return None
+    finally:
+        discard_image(image)
 
 
 def image_from_layer(source_image, layer, crop_to_layer=False,

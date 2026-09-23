@@ -54,9 +54,13 @@ class GType(str):
 
 
 class ParamSpec(object):
-    def __init__(self, name, value_type, minimum=None, maximum=None):
+    def __init__(self, name, value_type, minimum=None, maximum=None,
+                 default=None, nick=None, blurb=""):
         self.name = name
         self.value_type = value_type
+        self.nick = nick or name.replace("-", " ")
+        self.blurb = blurb
+        self.default_value = default
         if minimum is not None:
             self.minimum = minimum
         if maximum is not None:
@@ -197,10 +201,50 @@ class Color(object):
         return "<Color %r>" % (self.rgba,)
 
 
+#: Métadonnées renvoyées par le faux ``Gegl.Operation.get_key``.
+OPERATION_KEYS = {
+    "gegl:saturation": {"title": "Saturation",
+                        "description": "Modifie la saturation des couleurs.",
+                        "categories": "color"},
+    "gegl:vignette": {"title": "Vignettage",
+                      "description": "Assombrit les bords de l'image.",
+                      "categories": "render"},
+}
+
+
+class Operation(object):
+    """Imite les fonctions statiques de GeglOperation."""
+
+    @staticmethod
+    def list_properties(name):
+        if name not in KNOWN_OPERATIONS:
+            raise RuntimeError("opération inconnue : %s" % name)
+        return list(KNOWN_OPERATIONS[name])
+
+    @staticmethod
+    def get_key(name, key):
+        return OPERATION_KEYS.get(name, {}).get(key, "")
+
+
+class Node(object):
+    def __init__(self):
+        self._operation = None
+
+    def set_property(self, name, value):
+        if name == "operation":
+            self._operation = value
+
+    def list_properties(self):
+        return list(KNOWN_OPERATIONS.get(self._operation, []))
+
+
 GeglModule = types.SimpleNamespace(
     init=lambda _args: CALLS.record("Gegl.init"),
     has_operation=lambda name: name in KNOWN_OPERATIONS,
+    list_operations=lambda: sorted(KNOWN_OPERATIONS),
     Color=Color,
+    Operation=Operation,
+    Node=Node,
 )
 
 
@@ -521,7 +565,27 @@ PDB_PROCEDURES = {
         ParamSpec("image", GType("GimpImage")),
         ParamSpec("drawable", GType("GimpDrawable")),
     ],
+    # Un greffon plausible, pour les étapes « proc » des recettes.
+    "plug-in-unsharp-mask": [
+        ParamSpec("run-mode", GType("GimpRunMode")),
+        ParamSpec("image", GType("GimpImage")),
+        ParamSpec("drawables", GType("GimpCoreObjectArray")),
+        ParamSpec("radius", GObjectModule.TYPE_DOUBLE, 0.0, 120.0, 5.0),
+        ParamSpec("amount", GObjectModule.TYPE_DOUBLE, 0.0, 10.0, 0.5),
+        ParamSpec("threshold", GObjectModule.TYPE_INT, 0, 255, 0),
+    ],
+    "script-fu-drop-shadow": [
+        ParamSpec("run-mode", GType("GimpRunMode")),
+        ParamSpec("image", GType("GimpImage")),
+        ParamSpec("drawable", GType("GimpDrawable")),
+        ParamSpec("opacity", GObjectModule.TYPE_DOUBLE, 0.0, 100.0, 80.0),
+    ],
 }
+
+#: Procédures que le faux PDB annonce à ``query_procedures``.
+PDB_QUERY_RESULT = sorted(PDB_PROCEDURES) + [
+    "gimp-quit", "gimp-displays-flush", "file-png-load",
+]
 
 #: Fichiers écrits par le faux export (chemin → format).
 WRITTEN = []
@@ -533,6 +597,12 @@ class Procedure(object):
 
     def create_config(self):
         return Config(PDB_PROCEDURES[self.name])
+
+    def get_arguments(self):
+        return list(PDB_PROCEDURES[self.name])
+
+    def get_blurb(self):
+        return "Fait quelque chose (%s)." % self.name
 
     def run(self, config):
         CALLS.record("pdb.run", self.name, dict(config.values))
@@ -550,6 +620,9 @@ class Procedure(object):
 class PDB(object):
     def lookup_procedure(self, name):
         return Procedure(name) if name in PDB_PROCEDURES else None
+
+    def query_procedures(self, *args):
+        return list(PDB_QUERY_RESULT)
 
     def get_last_error(self):
         return ""

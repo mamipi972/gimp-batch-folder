@@ -9,7 +9,7 @@
   <img alt="GIMP 3.0+" src="https://img.shields.io/badge/GIMP-3.0%2B-5f3a7a">
   <img alt="Python 3" src="https://img.shields.io/badge/Python-3-3776ab">
   <img alt="License GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
-  <img alt="107 tests" src="https://img.shields.io/badge/tests-107%20passing-success">
+  <img alt="144 tests" src="https://img.shields.io/badge/tests-144%20passing-success">
 </p>
 
 > Resize, crop, rotate, watermark, convert, rename and colour-grade every
@@ -152,8 +152,8 @@ separate exported layer.
 
 ### Look recipes
 
-A recipe is a JSON file describing a chain of GEGL operations. Six ship with
-the plug-in:
+A recipe is a chain of colour-grading steps — GEGL operations, GIMP plug-ins,
+or the built-in split tone — saved as a JSON file. Six ship with the plug-in:
 
 | Recipe | Idea |
 |---|---|
@@ -168,10 +168,30 @@ The **Dosage** slider applies the recipe to a copy of the layer whose opacity
 it then sets: 40 % gives a four-times subtler effect without editing the
 recipe.
 
-#### Writing your own
+#### The editor
 
-Drop a `.json` into `<GIMP config dir>/batch-folder/looks/` (the exact path is
-shown in the **Look** tab), then click **Recharger les recettes**.
+The **Look** tab has **New…**, **Edit…** and **Duplicate…**. The editor builds
+itself from what your installation actually declares: the step chooser lists
+the operations reported by `Gegl.list_operations()` and the plug-ins reported
+by the PDB, and the settings for the selected step are generated from its real
+`GParamSpec` — slider bounds, default values, colour pickers, checkboxes.
+Nothing is hard-coded, so the editor follows your GEGL version without a
+single change here.
+
+A **before / after preview** runs the recipe on a reduced copy of a sample
+image — the first image of the source folder by default, or any file you pick.
+The reduction happens *before* the filters: a preview has to be instant, and
+you are judging a tint, a contrast or a vignette, not grain at pixel level.
+Untick *automatic preview* if a recipe gets heavy.
+
+Recipes you save go to `<GIMP config dir>/batch-folder/looks/`. The six
+bundled ones are never overwritten; a recipe you save under the same name
+takes precedence over the bundled one.
+
+#### The file format
+
+A recipe is plain JSON, so you can also write one by hand or send one to
+someone else:
 
 ```json
 {
@@ -184,6 +204,8 @@ shown in the **Look** tab), then click **Recharger les recettes**.
     { "op": "gegl:vignette",
       "params": { "color": "#000000", "radius": 1.4, "softness": 0.8 },
       "opacity": 50.0 },
+    { "proc": "plug-in-unsharp-mask",
+      "params": { "radius": 3.0, "amount": 0.4 } },
     { "special": "split-tone",
       "params": { "shadows": "#1d3b57", "highlights": "#e9cd93",
                   "amount": 25.0 } }
@@ -191,18 +213,28 @@ shown in the **Look** tab), then click **Recharger les recettes**.
 }
 ```
 
-* `op` — any GEGL operation (`gegl:…`). Property names are the ones listed by
-  GIMP's **Procedure Browser** and by `gegl --list-all`.
-* `opacity` (0–100) and `blend` (`normal`, `overlay`, `softlight`,
-  `multiply`, `screen`…) dose a single step.
-* `special: "split-tone"` is the only step written in Python rather than
-  GEGL: it tints shadows and highlights separately, using two layers masked
-  by the image's own luminosity and merged in soft light.
-* Colours are written `"#rrggbb"`.
+A step is of exactly one of three kinds:
 
-An operation missing from your build, or a property that does not exist, is
-**logged and skipped**: a recipe written for another GEGL version degrades
-the result, it does not break the batch.
+* **`op`** — any GEGL operation (`gegl:…`). Property names are the ones listed
+  by `gegl --list-all` and by GIMP's Procedure Browser.
+* **`proc`** — any PDB procedure: `plug-in-…`, `script-fu-…`, a third-party
+  plug-in. The plug-in fills `run-mode`, `image` and `drawable`/`drawables`
+  itself, so you only give the procedure's own parameters. Procedures that
+  open a window, quit GIMP or write files are kept out of the chooser. Be
+  aware that a procedure can reshape the layer stack: the plug-in revalidates
+  its target afterwards and says so in the log, but a `proc` step stays less
+  predictable than a GEGL operation.
+* **`special`** — a compound step written in Python. Only `split-tone` for
+  now: it tints shadows and highlights separately, using two layers masked by
+  the image's own luminosity and merged in soft light.
+
+Any step also takes `opacity` (0–100) and `blend` (`normal`, `overlay`,
+`softlight`, `multiply`, `screen`…) to dose it on its own. Colours are written
+`"#rrggbb"`.
+
+An operation missing from your build, a property that does not exist, or a
+plug-in you do not have installed is **logged and skipped**: a recipe written
+for another setup degrades the result, it does not break the batch.
 
 ### Presets
 
@@ -299,10 +331,12 @@ bfp/looks.py           recipe loading and validation — no GIMP import
 bfp/presets.py         JSON presets — no GIMP import
 bfp/paths.py           storage locations
 bfp/gimpops.py         every interaction with the GIMP 3 API
+bfp/opinfo.py          introspection of GEGL operations and PDB procedures
 bfp/runner.py          batch orchestration
 bfp/ui.py              GTK 3 dialog
+bfp/lookeditor.py      visual recipe editor, with preview
 looks/                 the six bundled recipes
-tests/                 107 tests, runnable without GIMP
+tests/                 144 tests, runnable without GIMP
 ```
 
 #### Tests
@@ -378,14 +412,14 @@ ported to GIMP 3 — it is listed for historical comparison only.
 | **Split toning** | ✅ **only here** | ❌ | ❌ |
 | **One dosage slider for a whole grade** | ✅ **only here** | ❌ | ❌ |
 | **Power features** | | | |
-| Run any installed filter or plug-in | ❌ GEGL ops only | ✅ | ✅ one procedure |
-| G'MIC filters | ❌ | ✅ | ❌ |
+| Run any installed filter or plug-in | ✅ via `proc` steps | ✅ | ✅ one procedure |
+| G'MIC filters | — via `proc`, untested | ✅ | ❌ |
 | Filtering conditions (visible, tagged…) | ❌ extension only | ✅ 19 built-in | ❌ |
 | Saveable, shareable presets | ✅ | ✅ | not documented |
 | Dry run (simulate without writing) | ✅ | ❌ | ❌ |
 | Detailed log file | ✅ | — | — |
 | Non-interactive PDB procedure | ✅ | — | — |
-| Automated test suite | ✅ 107 tests | — | — |
+| Automated test suite | ✅ 144 tests | — | — |
 
 ✅ yes · ❌ no · — not documented or not verified.
 
@@ -422,7 +456,7 @@ GPL-3.0-or-later, like GIMP. See [LICENSE](LICENSE).
   <img alt="GIMP 3.0+" src="https://img.shields.io/badge/GIMP-3.0%2B-5f3a7a">
   <img alt="Python 3" src="https://img.shields.io/badge/Python-3-3776ab">
   <img alt="License GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
-  <img alt="107 tests" src="https://img.shields.io/badge/tests-107%20passing-success">
+  <img alt="144 tests" src="https://img.shields.io/badge/tests-144%20passing-success">
 </p>
 
 > Redimensionnez, recadrez, faites pivoter, ajoutez un filigrane, convertissez, renommez et effectuez un étalonnage des couleurs sur chaque
@@ -564,8 +598,9 @@ composite ressortirait comme un calque exporté à part.
 
 ### Recettes de look
 
-Une recette est un fichier JSON décrivant une suite d'opérations GEGL.
-Six sont livrées :
+Une recette est un enchaînement d'étapes d'étalonnage — opérations GEGL,
+greffons GIMP, ou le virage partiel intégré — enregistré dans un fichier
+JSON. Six sont livrées :
 
 | Recette | Idée |
 |---|---|
@@ -580,11 +615,32 @@ Le curseur **Dosage** applique la recette sur une copie du calque dont on
 règle l'opacité : 40 % donne un effet quatre fois plus discret, sans avoir à
 retoucher la recette.
 
-#### Écrire la vôtre
+#### L'éditeur
 
-Déposez un `.json` dans
-`<dossier de configuration GIMP>/batch-folder/looks/` (le chemin exact est
-rappelé dans l'onglet **Look**), puis cliquez sur **Recharger les recettes**.
+L'onglet **Look** propose **Nouvelle…**, **Modifier…** et **Dupliquer…**.
+L'éditeur se construit à partir de ce que votre installation déclare
+réellement : le sélecteur d'étape liste les opérations renvoyées par
+`Gegl.list_operations()` et les greffons annoncés par le PDB, et les réglages
+de l'étape choisie sont fabriqués depuis ses vrais `GParamSpec` — bornes des
+curseurs, valeurs par défaut, sélecteurs de couleur, cases à cocher. Rien
+n'est codé en dur : l'éditeur suivra votre version de GEGL sans qu'on ait à y
+toucher.
+
+Un **aperçu avant/après** applique la recette à une copie réduite d'une image
+témoin — la première du dossier source par défaut, ou le fichier de votre
+choix. La réduction précède les filtres : un aperçu doit être instantané, et
+l'on juge une teinte, un contraste ou un vignettage, pas du grain au pixel
+près. Décochez *Aperçu automatique* si une recette devient lourde.
+
+Les recettes que vous enregistrez vont dans
+`<configuration GIMP>/batch-folder/looks/`. Les six livrées ne sont jamais
+écrasées ; une recette que vous enregistrez sous le même nom a la priorité sur
+celle du greffon.
+
+#### Le format de fichier
+
+Une recette est du JSON ordinaire : on peut donc aussi l'écrire à la main, et
+surtout l'envoyer à quelqu'un.
 
 ```json
 {
@@ -597,6 +653,8 @@ rappelé dans l'onglet **Look**), puis cliquez sur **Recharger les recettes**.
     { "op": "gegl:vignette",
       "params": { "color": "#000000", "radius": 1.4, "softness": 0.8 },
       "opacity": 50.0 },
+    { "proc": "plug-in-unsharp-mask",
+      "params": { "radius": 3.0, "amount": 0.4 } },
     { "special": "split-tone",
       "params": { "shadows": "#1d3b57", "highlights": "#e9cd93",
                   "amount": 25.0 } }
@@ -604,19 +662,32 @@ rappelé dans l'onglet **Look**), puis cliquez sur **Recharger les recettes**.
 }
 ```
 
-* `op` — n'importe quelle opération GEGL (`gegl:…`). Les noms de propriétés
-  sont ceux du **Navigateur de procédures** de GIMP et de `gegl --list-all`.
-* `opacity` (0–100) et `blend` (`normal`, `overlay`, `softlight`, `multiply`,
-  `screen`…) dosent une étape isolément.
-* `special: "split-tone"` est la seule étape écrite en Python plutôt qu'en
-  GEGL : elle teinte séparément ombres et hautes lumières, via deux calques
-  masqués par la luminosité de l'image et fusionnés en lumière douce.
-* Les couleurs s'écrivent `"#rrggbb"`.
+Une étape est de l'un de ces trois genres, et d'un seul :
 
-Une opération absente de votre installation, ou une propriété qui n'existe
-pas, est **signalée dans le journal et simplement sautée** : une recette
-écrite pour une autre version de GEGL dégrade le rendu, elle ne casse pas le
-lot.
+* **`op`** — n'importe quelle opération GEGL (`gegl:…`). Les noms de
+  propriétés sont ceux de `gegl --list-all` et du Navigateur de procédures de
+  GIMP.
+* **`proc`** — n'importe quelle procédure du PDB : `plug-in-…`,
+  `script-fu-…`, un greffon tiers. Le greffon remplit lui-même `run-mode`,
+  `image` et `drawable`/`drawables` ; vous ne donnez que les paramètres
+  propres à la procédure. Celles qui ouvrent une fenêtre, quittent GIMP ou
+  écrivent des fichiers sont écartées du sélecteur. Attention : une procédure
+  peut remanier la pile de calques — le greffon revalide sa cible ensuite et
+  le signale dans le journal, mais une étape `proc` reste moins prévisible
+  qu'une opération GEGL.
+* **`special`** — une étape composée écrite en Python. Seul `split-tone`
+  existe pour l'instant : il teinte séparément les ombres et les hautes
+  lumières, via deux calques masqués par la luminosité de l'image et fusionnés
+  en lumière douce.
+
+Toute étape accepte en plus `opacity` (0–100) et `blend` (`normal`,
+`overlay`, `softlight`, `multiply`, `screen`…) pour la doser isolément. Les
+couleurs s'écrivent `"#rrggbb"`.
+
+Une opération absente de votre installation, une propriété qui n'existe pas ou
+un greffon que vous n'avez pas sont **signalés dans le journal et simplement
+sautés** : une recette écrite pour une autre configuration dégrade le rendu,
+elle ne casse pas le lot.
 
 ### Préréglages
 
@@ -719,10 +790,12 @@ bfp/looks.py           lecture et validation des recettes — aucun import GIMP
 bfp/presets.py         préréglages JSON — aucun import GIMP
 bfp/paths.py           emplacements de stockage
 bfp/gimpops.py         toutes les interactions avec l'API GIMP 3
+bfp/opinfo.py          introspection des opérations GEGL et des procédures
 bfp/runner.py          orchestration du lot
 bfp/ui.py              boîte de dialogue GTK 3
+bfp/lookeditor.py      éditeur visuel de recettes, avec aperçu
 looks/                 les six recettes livrées
-tests/                 107 tests, exécutables sans GIMP
+tests/                 144 tests, exécutables sans GIMP
 ```
 
 #### Tests
@@ -731,7 +804,7 @@ tests/                 107 tests, exécutables sans GIMP
 python3 -m unittest discover -s tests -p "test_*.py" -t tests
 ```
 
-Les 107 tests tournent **sans GIMP** : `tests/fakegi.py` et `tests/fakegtk.py`
+Les 144 tests tournent **sans GIMP** : `tests/fakegi.py` et `tests/fakegtk.py`
 simulent juste assez de GIMP 3, GEGL et GTK pour exécuter le pipeline et
 construire la boîte de dialogue. Ils vérifient l'ordre des opérations, les
 valeurs transmises à chaque procédure, les chemins de repli, l'aller-retour
@@ -802,14 +875,14 @@ d'Alessandro Francesconi, était la référence pour GIMP 2.10 ; il n'a **pas**
 | **Virage partiel** | ✅ **unique** | ❌ | ❌ |
 | **Un seul curseur de dosage global** | ✅ **unique** | ❌ | ❌ |
 | **Fonctions avancées** | | | |
-| Exécuter n'importe quel filtre ou greffon | ❌ opérations GEGL seulement | ✅ | ✅ une procédure |
-| Filtres G'MIC | ❌ | ✅ | ❌ |
+| Exécuter n'importe quel filtre ou greffon | ✅ via les étapes « proc » | ✅ | ✅ une procédure |
+| Filtres G'MIC | — via « proc », non vérifié | ✅ | ❌ |
 | Conditions de filtrage (visible, étiquette…) | ❌ extension seulement | ✅ 19 intégrées | ❌ |
 | Préréglages enregistrables et partageables | ✅ | ✅ | non documenté |
 | Simulation (sans rien écrire) | ✅ | ❌ | ❌ |
 | Journal détaillé | ✅ | — | — |
 | Procédure PDB non interactive | ✅ | — | — |
-| Suite de tests automatisés | ✅ 107 tests | — | — |
+| Suite de tests automatisés | ✅ 144 tests | — | — |
 
 ✅ oui · ❌ non · — non documenté ou non vérifié.
 

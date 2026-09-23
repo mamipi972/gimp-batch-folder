@@ -80,6 +80,13 @@ class Widget(object):
     def attach(self, child, *args):
         self.children.append(child)
 
+    def get_children(self):
+        return list(self.children)
+
+    def remove(self, child):
+        if child in self.children:
+            self.children.remove(child)
+
     def show_all(self):
         self._visible = True
         for child in self.children:
@@ -364,7 +371,77 @@ class ProgressBar(Widget):
         pass
 
 
+class ListBoxRow(Widget):
+    def __init__(self, *args, **kwargs):
+        super(ListBoxRow, self).__init__(*args, **kwargs)
+        self.parent_box = None
+
+    def get_index(self):
+        if self.parent_box is None:
+            return -1
+        try:
+            return self.parent_box.children.index(self)
+        except ValueError:
+            return -1
+
+    def text(self):
+        for child in self.children:
+            if isinstance(child, Label):
+                return child.get_text()
+        return ""
+
+
+class ListBox(Widget):
+    def __init__(self, *args, **kwargs):
+        super(ListBox, self).__init__(*args, **kwargs)
+        self._selected = None
+
+    def add(self, row):
+        row.parent_box = self
+        self.children.append(row)
+
+    def remove(self, row):
+        if row in self.children:
+            self.children.remove(row)
+            if self._selected is row:
+                self._selected = None
+
+    def get_row_at_index(self, index):
+        if 0 <= index < len(self.children):
+            return self.children[index]
+        return None
+
+    def select_row(self, row):
+        self._selected = row
+        self.emit("row-selected", row)
+
+    def get_selected_row(self):
+        return self._selected
+
+    def rows_text(self):
+        return [row.text() for row in self.children]
+
+
+class SearchEntry(Entry):
+    def set_text(self, text):
+        self._text = str(text)
+        self.emit("search-changed")
+
+
+class Image(Widget):
+    def __init__(self, *args, **kwargs):
+        super(Image, self).__init__(*args, **kwargs)
+        self.file = None
+
+    def set_from_file(self, path):
+        self.file = path
+
+
 class Dialog(Widget):
+    #: Les tests empilent ici les réponses que ``run()`` renverra, dans
+    #: l'ordre. Une pile vide renvoie CLOSE, ce qui ferme la fenêtre.
+    RESPONSES = []
+
     def __init__(self, title="", use_header_bar=False, **kwargs):
         super(Dialog, self).__init__(**kwargs)
         self.title = title
@@ -383,16 +460,25 @@ class Dialog(Widget):
         self.emit("response", response_id)
 
     def run(self):
-        return 0
+        if Dialog.RESPONSES:
+            return Dialog.RESPONSES.pop(0)
+        return "ResponseType.CLOSE"
 
 
 class MessageDialog(Dialog):
+    #: Tous les messages affichés, pour que les tests puissent les lire.
+    SHOWN = []
+
     def __init__(self, **kwargs):
         super(MessageDialog, self).__init__(**kwargs)
         self.secondary = ""
 
     def format_secondary_text(self, text):
         self.secondary = text
+        MessageDialog.SHOWN.append(text)
+
+    def run(self):
+        return "ResponseType.OK"
 
 
 class _Settings(object):
@@ -418,6 +504,10 @@ GtkModule = types.SimpleNamespace(
     CheckButton=CheckButton,
     RadioButton=RadioButton,
     Entry=Entry,
+    SearchEntry=SearchEntry,
+    ListBox=ListBox,
+    ListBoxRow=ListBoxRow,
+    Image=Image,
     ComboBoxText=ComboBoxText,
     Adjustment=Adjustment,
     SpinButton=SpinButton,

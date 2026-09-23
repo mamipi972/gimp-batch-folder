@@ -36,20 +36,54 @@ SPECIAL_STEPS = ("split-tone",)
 
 
 class LookStep(object):
-    """Une étape d'une recette."""
+    """Une étape d'une recette.
 
-    __slots__ = ("op", "special", "params", "opacity", "blend")
+    Une étape est de l'un de ces trois genres, et d'un seul :
 
-    def __init__(self, op=None, special=None, params=None, opacity=100.0,
-                 blend="replace"):
+    ``op``       une opération GEGL (``gegl:saturation``) ;
+    ``proc``     une procédure du PDB (``plug-in-…``, ``script-fu-…``) ;
+    ``special``  une étape composée écrite en Python (``split-tone``).
+    """
+
+    __slots__ = ("op", "proc", "special", "params", "opacity", "blend")
+
+    def __init__(self, op=None, proc=None, special=None, params=None,
+                 opacity=100.0, blend="replace"):
         self.op = op
+        self.proc = proc
         self.special = special
         self.params = dict(params or {})
         self.opacity = clamp(float(opacity), 0.0, 100.0)
         self.blend = str(blend or "replace").lower()
 
+    @property
+    def kind(self):
+        if self.special:
+            return "special"
+        if self.proc:
+            return "proc"
+        return "op"
+
+    @property
+    def identifier(self):
+        """Ce qui désigne l'étape, quel que soit son genre."""
+        return self.special or self.proc or self.op
+
+    def label(self):
+        """Libellé court pour la liste de l'éditeur."""
+        if self.special == "split-tone":
+            return "Virage partiel"
+        if self.proc:
+            return "%s (greffon)" % self.proc
+        return str(self.op or "?")
+
+    def copy(self):
+        return LookStep(op=self.op, proc=self.proc, special=self.special,
+                        params=dict(self.params), opacity=self.opacity,
+                        blend=self.blend)
+
     def __repr__(self):  # pragma: no cover - confort de débogage
-        return "<LookStep %s %r>" % (self.special or self.op, self.params)
+        return "<LookStep %s %r>" % (self.identifier, self.params)
 
 
 class Look(object):
@@ -66,12 +100,20 @@ class Look(object):
     def __repr__(self):  # pragma: no cover
         return "<Look %r (%d étapes)>" % (self.name, len(self.steps))
 
+    def copy(self, name=None):
+        """Duplique la recette (l'éditeur travaille toujours sur une copie)."""
+        return Look(name=name or self.name, description=self.description,
+                    steps=[step.copy() for step in self.steps],
+                    path=None if name else self.path)
+
     def to_dict(self):
         steps = []
         for step in self.steps:
             data = {"params": dict(step.params)}
             if step.special:
                 data["special"] = step.special
+            elif step.proc:
+                data["proc"] = step.proc
             else:
                 data["op"] = step.op
             if step.opacity != 100.0:
@@ -102,15 +144,25 @@ def parse_look(data, path=None):
         if not isinstance(raw, dict):
             raise BatchError("Étape %d invalide dans « %s »." % (position, name))
         op = raw.get("op")
+        proc = raw.get("proc")
         special = raw.get("special")
+        if sum(1 for value in (op, proc, special) if value) > 1:
+            raise BatchError(
+                "Étape %d de « %s » : choisissez « op », « proc » ou "
+                "« special », pas plusieurs." % (position, name))
         if special:
             if special not in SPECIAL_STEPS:
                 raise BatchError(
                     "Étape spéciale inconnue « %s » dans « %s »." % (special, name))
+        elif proc:
+            if not str(proc).strip():
+                raise BatchError("Étape %d de « %s » : « proc » est vide."
+                                 % (position, name))
         elif not op or ":" not in str(op):
             raise BatchError(
                 "Étape %d de « %s » : « op » doit être une opération GEGL "
-                "comme « gegl:saturation »." % (position, name))
+                "comme « gegl:saturation », ou utilisez « proc » pour une "
+                "procédure du PDB." % (position, name))
         params = raw.get("params") or {}
         if not isinstance(params, dict):
             raise BatchError("Étape %d de « %s » : « params » doit être un objet."
@@ -119,7 +171,7 @@ def parse_look(data, path=None):
             # Validation précoce des couleurs pour ne pas échouer en plein lot.
             hex_to_rgba(params.get("shadows", "#000000"))
             hex_to_rgba(params.get("highlights", "#ffffff"))
-        steps.append(LookStep(op=op, special=special, params=params,
+        steps.append(LookStep(op=op, proc=proc, special=special, params=params,
                               opacity=raw.get("opacity", 100.0),
                               blend=raw.get("blend", "replace")))
 
