@@ -1,0 +1,11 @@
+{
+  "name": "Jour couvert",
+  "description": "Ciel gris et lumière plate : contraste et couleurs relancés, ombres ouvertes, soupçon de chaleur dans les hautes lumières.",
+  "steps": [
+    { "op": "gegl:shadows-highlights", "params": { "shadows": 16.0, "highlights": -8.0, "radius": 100.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.20, "brightness": -0.01 } },
+    { "op": "gegl:saturation",         "params": { "scale": 1.16 } },
+    { "special": "split-tone",         "params": { "shadows": "#2a3340", "highlights": "#ffe9c8", "amount": 14.0 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 0.9, "scale": 0.5, "threshold": 0.0 } }
+  ]
+}

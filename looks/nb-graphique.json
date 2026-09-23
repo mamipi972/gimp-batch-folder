@@ -1,0 +1,10 @@
+{
+  "name": "N&B graphique",
+  "description": "Noir et blanc dur, presque sérigraphique : tons moyens écrasés, blancs purs, noirs bouchés. Pour des affiches ou des images très construites — pas pour des portraits.",
+  "steps": [
+    { "op": "gegl:saturation",         "params": { "scale": 0.0 } },
+    { "op": "gegl:levels",             "params": { "in-low": 0.22, "in-high": 0.80, "out-low": 0.0, "out-high": 1.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.45 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 1.1, "scale": 0.5, "threshold": 0.0 } }
+  ]
+}

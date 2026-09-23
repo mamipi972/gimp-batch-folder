@@ -1,0 +1,10 @@
+{
+  "name": "Sépia doux",
+  "description": "Virage sépia classique, obtenu en désaturant puis en reteintant — pas en jaunissant l'image. Noirs légèrement relevés, comme un tirage ancien.",
+  "steps": [
+    { "op": "gegl:saturation",         "params": { "scale": 0.0 } },
+    { "op": "gegl:levels",             "params": { "in-low": 0.0, "in-high": 0.97, "out-low": 0.05, "out-high": 0.97 } },
+    { "special": "split-tone",         "params": { "shadows": "#3a2a1c", "highlights": "#f0dcb4", "amount": 58.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.08 } }
+  ]
+}

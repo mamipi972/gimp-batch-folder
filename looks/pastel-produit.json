@@ -1,0 +1,10 @@
+{
+  "name": "Pastel produit",
+  "description": "Fiches produit et catalogues : image aérée, noirs adoucis, couleurs retenues, netteté discrète. Neutre et reposant sur fond clair.",
+  "steps": [
+    { "op": "gegl:levels",             "params": { "in-low": 0.0, "in-high": 0.98, "out-low": 0.055, "out-high": 1.0 } },
+    { "op": "gegl:saturation",         "params": { "scale": 0.86 } },
+    { "op": "gegl:brightness-contrast","params": { "brightness": 0.03, "contrast": 0.96 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 0.7, "scale": 0.4, "threshold": 0.0 } }
+  ]
+}

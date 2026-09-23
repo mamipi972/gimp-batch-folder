@@ -1,0 +1,11 @@
+{
+  "name": "Heure bleue",
+  "description": "Crépuscule et scènes nocturnes : exposition légèrement retenue, ombres froides, lumières artificielles laissées chaudes pour le contraste.",
+  "steps": [
+    { "op": "gegl:exposure",           "params": { "exposure": -0.18 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.12 } },
+    { "special": "split-tone",         "params": { "shadows": "#13294b", "highlights": "#ffd9a0", "amount": 38.0 } },
+    { "op": "gegl:saturation",         "params": { "scale": 1.08 } },
+    { "op": "gegl:vignette",           "params": { "color": "#000000", "radius": 1.25, "softness": 0.8, "gamma": 2.0, "proportion": 1.0 }, "opacity": 55.0 }
+  ]
+}

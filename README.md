@@ -153,16 +153,34 @@ separate exported layer.
 ### Look recipes
 
 A recipe is a chain of colour-grading steps — GEGL operations, GIMP plug-ins,
-or the built-in split tone — saved as a JSON file. Six ship with the plug-in:
+or the built-in split tone — saved as a JSON file. Fifteen ship with the
+plug-in, in two families.
+
+**Corrective** — these fix a problem rather than add a style, and are the ones
+you will reach for on a folder of ordinary photos:
+
+| Recipe | What it is for |
+|---|---|
+| **Scan lisible** | a scanned or photographed document: paper whitened, ink darkened, text edges firmed up |
+| **Sauver une sous-exposition** | too dark: exposure raised, shadows opened, highlights held back |
+| **Jour couvert** | grey sky and flat light: contrast and colour revived, a hint of warmth in the highlights |
+| **Netteté d'impression** | output sharpening only, no colour touched — apply last, after resizing |
+| **Pastel produit** | catalogue and product shots: airy, softened blacks, restrained colour |
+| **Punch web** | screen delivery: output sharpening, more contrast and colour |
+
+**Aesthetic** — these add a deliberate look:
 
 | Recipe | Idea |
 |---|---|
 | **N&B contrasté** | punchy black & white: desaturation, strong contrast, micro-sharpening, vignette |
+| **N&B graphique** | hard, almost screen-printed black & white — for posters, not portraits |
 | **Argentique doux** | film look: lifted blacks, cool/warm split tone, fine grain |
 | **Cinéma teal & orange** | teal shadows, amber highlights |
+| **Heure bleue** | dusk and night: cool shadows, artificial light left warm |
 | **Portrait doux** | opened shadows, soft glow |
+| **Sépia doux** | classic sepia toning — desaturate, then re-tint; not a yellow cast |
+| **Cyanotype** | the Prussian blue of iron prints; strong, for graphic images |
 | **Vintage délavé** | heavily lifted blacks, faded colours, warm cast |
-| **Punch web** | output sharpening, more contrast and colour |
 
 The **Dosage** slider applies the recipe to a copy of the layer whose opacity
 it then sets: 40 % gives a four-times subtler effect without editing the
@@ -184,7 +202,7 @@ The reduction happens *before* the filters: a preview has to be instant, and
 you are judging a tint, a contrast or a vignette, not grain at pixel level.
 Untick *automatic preview* if a recipe gets heavy.
 
-Recipes you save go to `<GIMP config dir>/batch-folder/looks/`. The six
+Recipes you save go to `<GIMP config dir>/batch-folder/looks/`. The fifteen
 bundled ones are never overwritten; a recipe you save under the same name
 takes precedence over the bundled one.
 
@@ -335,7 +353,7 @@ bfp/opinfo.py          introspection of GEGL operations and PDB procedures
 bfp/runner.py          batch orchestration
 bfp/ui.py              GTK 3 dialog
 bfp/lookeditor.py      visual recipe editor, with preview
-looks/                 the six bundled recipes
+looks/                 the fifteen bundled recipes
 tests/                 144 tests, runnable without GIMP
 ```
 
@@ -600,16 +618,34 @@ composite ressortirait comme un calque exporté à part.
 
 Une recette est un enchaînement d'étapes d'étalonnage — opérations GEGL,
 greffons GIMP, ou le virage partiel intégré — enregistré dans un fichier
-JSON. Six sont livrées :
+JSON. Quinze sont livrées, en deux familles.
+
+**Correctives** — elles réparent un défaut plutôt qu'elles n'ajoutent un
+style, et ce sont celles qui servent le plus sur un dossier de photos
+ordinaires :
+
+| Recette | À quoi elle sert |
+|---|---|
+| **Scan lisible** | document scanné ou photographié : papier blanchi, encre noircie, contours du texte raffermis |
+| **Sauver une sous-exposition** | image trop sombre : exposition relevée, ombres ouvertes, hautes lumières retenues |
+| **Jour couvert** | ciel gris et lumière plate : contraste et couleurs relancés, soupçon de chaleur dans les lumières |
+| **Netteté d'impression** | uniquement l'accentuation de sortie, aucune couleur touchée — à appliquer en dernier, après redimensionnement |
+| **Pastel produit** | catalogues et fiches produit : image aérée, noirs adoucis, couleurs retenues |
+| **Punch web** | destination écran : netteté de sortie, contraste et couleurs renforcés |
+
+**Esthétiques** — elles posent un parti pris :
 
 | Recette | Idée |
 |---|---|
 | **N&B contrasté** | désaturation, contraste marqué, micro-netteté, vignettage |
+| **N&B graphique** | noir et blanc dur, presque sérigraphique — pour des affiches, pas des portraits |
 | **Argentique doux** | noirs relevés, virage froid/chaud, grain fin |
 | **Cinéma teal & orange** | ombres bleu-vert, hautes lumières ambrées |
+| **Heure bleue** | crépuscule et nuit : ombres froides, lumières artificielles laissées chaudes |
 | **Portrait doux** | ombres débouchées, voile lumineux |
+| **Sépia doux** | virage sépia classique — on désature puis on reteinte, ce n'est pas un jaunissement |
+| **Cyanotype** | le bleu de Prusse des tirages au fer ; très marqué, pour images graphiques |
 | **Vintage délavé** | noirs très relevés, couleurs passées, dominante chaude |
-| **Punch web** | netteté de sortie, contraste et couleurs renforcés |
 
 Le curseur **Dosage** applique la recette sur une copie du calque dont on
 règle l'opacité : 40 % donne un effet quatre fois plus discret, sans avoir à
@@ -633,7 +669,7 @@ l'on juge une teinte, un contraste ou un vignettage, pas du grain au pixel
 près. Décochez *Aperçu automatique* si une recette devient lourde.
 
 Les recettes que vous enregistrez vont dans
-`<configuration GIMP>/batch-folder/looks/`. Les six livrées ne sont jamais
+`<configuration GIMP>/batch-folder/looks/`. Les quinze livrées ne sont jamais
 écrasées ; une recette que vous enregistrez sous le même nom a la priorité sur
 celle du greffon.
 
@@ -794,7 +830,7 @@ bfp/opinfo.py          introspection des opérations GEGL et des procédures
 bfp/runner.py          orchestration du lot
 bfp/ui.py              boîte de dialogue GTK 3
 bfp/lookeditor.py      éditeur visuel de recettes, avec aperçu
-looks/                 les six recettes livrées
+looks/                 les quinze recettes livrées
 tests/                 144 tests, exécutables sans GIMP
 ```
 

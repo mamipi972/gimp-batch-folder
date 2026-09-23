@@ -1,0 +1,10 @@
+{
+  "name": "Sauver une sous-exposition",
+  "description": "Photo trop sombre : ombres débouchées, exposition relevée, hautes lumières retenues pour ne pas cramer ce qui restait correct.",
+  "steps": [
+    { "op": "gegl:exposure",           "params": { "exposure": 0.75, "black-level": 0.004 } },
+    { "op": "gegl:shadows-highlights", "params": { "shadows": 38.0, "highlights": -12.0, "radius": 120.0, "compress": 35.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.06 } },
+    { "op": "gegl:saturation",         "params": { "scale": 1.06 } }
+  ]
+}

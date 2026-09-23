@@ -1,0 +1,8 @@
+{
+  "name": "Netteté d'impression",
+  "description": "Ne touche à aucune couleur : uniquement l'accentuation de sortie que l'encre sur papier fait perdre. À appliquer en dernier, après redimensionnement.",
+  "steps": [
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 1.6, "scale": 0.65, "threshold": 0.004 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 0.4, "scale": 0.35, "threshold": 0.0 } }
+  ]
+}

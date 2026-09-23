@@ -1,0 +1,10 @@
+{
+  "name": "Scan lisible",
+  "description": "Papier scanné : fond blanchi, encre noircie, texte redressé. Pour rendre lisible un document photographié ou scanné sans le passer en noir et blanc pur.",
+  "steps": [
+    { "op": "gegl:levels",             "params": { "in-low": 0.26, "in-high": 0.88, "out-low": 0.0, "out-high": 1.0 } },
+    { "op": "gegl:saturation",         "params": { "scale": 0.45 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.22, "brightness": 0.02 } },
+    { "op": "gegl:unsharp-mask",       "params": { "std-dev": 0.8, "scale": 0.9, "threshold": 0.0 } }
+  ]
+}

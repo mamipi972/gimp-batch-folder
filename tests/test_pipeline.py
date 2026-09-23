@@ -233,7 +233,7 @@ class TestLooks(PipelineTestCase):
     def test_recettes_livrees_chargeables(self):
         looks, errors = load_looks([paths.bundled_looks_directory()])
         self.assertEqual(errors, [])
-        self.assertEqual(len(looks), 6)
+        self.assertEqual(len(looks), 15)
 
     def test_application_d_une_recette(self):
         look = parse_look({

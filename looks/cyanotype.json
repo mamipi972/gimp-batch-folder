@@ -1,0 +1,9 @@
+{
+  "name": "Cyanotype",
+  "description": "Le bleu de Prusse des tirages au fer : désaturation complète, ombres bleu profond, hautes lumières bleu pâle. Très marqué, à réserver aux images graphiques.",
+  "steps": [
+    { "op": "gegl:saturation",         "params": { "scale": 0.0 } },
+    { "op": "gegl:brightness-contrast","params": { "contrast": 1.18 } },
+    { "special": "split-tone",         "params": { "shadows": "#0b3a63", "highlights": "#cfe6f5", "amount": 72.0 } }
+  ]
+}
